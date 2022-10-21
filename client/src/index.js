@@ -25,101 +25,51 @@ const getTxnStatus = async (txHash) => {
   }
 }
 
-const approveInternalToTransfer = (internal, tokencontract, accounts) => {
-  let _tokens;
-  $("#approvepli").on("change", (e) => {
-    _tokens = e.target.value;
-    console.log("approveval", _tokens)
+const sampleStoreData = (sample, accounts) => {
+  let _age;
+  let _name;
+  let _qual;
+  $("#age").on("change", (e) => {
+    _age = e.target.value;
+    console.log("_age", _age)
   });
-  $("#approveInternalPLI").on("click", async (e) => {
-    console.log("Iam at approveInternalToTransfer", internal._address)
+  $("#name").on("change", (e) => {
+    _name = e.target.value;
+    console.log("_name", _name)
+  });
+  $("#qual").on("change", (e) => {
+    _qual = e.target.value;
+    console.log("_qual", _qual)
+  });
+  $("#storedata").on("click", async (e) => {
     e.preventDefault();
-    const tokens = await convertTokens(_tokens);
-    console.log("tokkens are ", tokens)
-    await tokencontract.methods.approve(internal._address, tokens)
+    await sample.methods.storeData(_age,_name, _qual)
       .send({ from: accounts[0], gas: 2100000 })
       .on("transactionHash", async function (transactionHash) {
         const [txhash, status] = await getTxnStatus(transactionHash);
         console.log("txhashshshs", txhash, status)
       });
-    /////NEWLY ADDED ////
   });
 };
 
-const depositPLIInternalContract = (internal, accounts) => {
-  let _amount;
-  $("#depositpli").on("change", (e) => {
-    _amount = e.target.value;
-    console.log("PLIAmountToDeposit", _amount)
-  });
-  $("#depositInternalPLI").on("click", async (e) => {
-    console.log("Iam at depositPLIInternalContract Into internal", internal._address, accounts[0])
+const getListofUsers = (sample, accounts) => {
+  $("#listofusers").on("click", async (e) => {
     e.preventDefault();
-    const tokens = await convertTokens(_amount);
-    console.log("tokens are", tokens)
-    await internal.methods.depositPLI(tokens)
-      .send({ from: accounts[0], gas: 21000000 })
-      .on("transactionHash", async function (transactionHash) {
-        const [txhash, status] = await getTxnStatus(transactionHash);
-        console.log("txhashshshs", txhash, status)
-      });
-  });
-}
-
-const getContractBalanceforuser = (internal, accounts) => {
-  $("#getContractBalforUser").on("click", async (e) => {
-    console.log("Iam at getContractBalanceforuser Into internal", internal._address, accounts[0])
-    e.preventDefault();
-    const rate = await internal.methods.plidbs(accounts[0]).call().then(res => {
-      console.log("res",res.totalcredits);
-      var pli = web3.utils.fromWei(res.totalcredits.toString(), 'ether');
-      console.log("Total PLI in Contract Deposited by User",pli);
-
+    const rate = await sample.methods.listOfUsers(accounts[0],0).call().then(res => {
+      console.log("res",res);
     });
   });
 }
-
-const getContractBalanceTotalPLI = (internal, tokencontract,accounts) => {
-  $("#getContractBalforContract").on("click", async (e) => {
-    console.log("Iam at getContractBalanceTotalPLI Into internal", internal._address, accounts[0])
-    e.preventDefault();
-    const rate = await tokencontract.methods.balanceOf(internal._address).call().then(res => {
-      const tokens = web3.utils.fromWei(res.toString(), 'ether');
-      console.log("taotal Balance",tokens);
-    });
-  });
-}
-
-const getLatestAnswer = (internal,accounts) => {
-  $("#getlatestvalue").on("click", async (e) => {
-    console.log("Iam at getLatestAnswer Into internal", internal._address, accounts[0])
-    e.preventDefault();
-    const rate = await internal.methods.showPrice().call().then(res => {
-      console.log("Latest value is",res);
-    });
-  });
-}
-
-
-
 
 async function nodeOperatorApp() {
   const web3 = await loadWeb3();
   console.log("Web3", web3);
   const accounts = await web3.eth.getAccounts();
   console.log("accounts", accounts);
-
-  const tokencontract = await getTokenContract(web3); //token Contract
-  console.log("tokencontract", tokencontract);
-  const internalCont = await getInternalContract(web3);
-  console.log("internalCont", internalCont);
-
-  // getTokenBalance(tokencontract);
-  getContractBalanceforuser(internalCont, accounts);
-  getContractBalanceTotalPLI(internalCont,tokencontract, accounts);
-  approveInternalToTransfer(internalCont, tokencontract, accounts);
-  depositPLIInternalContract(internalCont, accounts);
-  getLatestAnswer(internalCont, accounts);
+  const sample = await getSampleContract(web3); //token Contract
+  console.log("sample", sample);
+  sampleStoreData(sample,accounts);
+  getListofUsers(sample,accounts);
 }
 
 nodeOperatorApp();
